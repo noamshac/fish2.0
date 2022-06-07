@@ -26,49 +26,51 @@ typedef struct move {
 
 
 double Dist(point_t, point_t);
-move_t* AllocateMove(move_t*);
+move_t* AllocateMove(move_t*,point_t);
+pools_t* AllocatePool(pools_t*, point_t);
 point_t FindNearest(move_t*, pools_t*);
 
 //move_t* BuildBT(move_t*, pools_t*, point_t);
 
 int main()
 {
-	pools_t* pool1 = (pools_t*)malloc(sizeof(pools_t));
-	if (pool1 == NULL) return(-1);
-	pool1->center.x = 1;
-	pool1->center.y = 1;
-	printf_s("pool1 is %d ,%d \n", pool1->center.x, pool1->center.y);
-	pool1->next = (pools_t*)malloc(sizeof(pools_t));
-	if (pool1->next != NULL) exit;
-	pool1->next->center.x = 4;
-	pool1->next->center.y = 1;
-	pool1->next->next = (pools_t*)malloc(sizeof(pools_t));
-	if (pool1->next->next != NULL) exit;
-	pool1->next->next->center.x = 6;
-	pool1->next->next->center.y = 5;
-	pool1->next->next->next = (pools_t*)malloc(sizeof(pools_t));
-	if (pool1->next->next->next != NULL) exit;
-	pool1->next->next->next->center.x = 1;
-	pool1->next->next->next->center.y = 6;
-	pool1->next->next->next->next = (pools_t*)malloc(sizeof(pools_t));
-	if (pool1->next->next->next->next != NULL)exit;
-	pool1->next->next->next->next->center.x = 15;
-	pool1->next->next->next->next->center.y = 21;
-	pool1->next->next->next->next->next = NULL;
-	
-	
-
-	move_t* start = (move_t*)malloc(sizeof(move_t));
-	start->CurrentP.x = 8;
-	start->CurrentP.y = 5;
-
 	point_t p1;
-	p1= FindNearest(start, pool1);
+	p1.x = 0;
+	p1.y = 0;
+	point_t p2;
+	p2.x = 1;
+	p2.y = 1;
+	point_t p3;
+	p3.x = 4;
+	p3.y = 1;
+	point_t p4;
+	p4.x = 6;
+	p4.y = 5;
+	point_t p5;
+	p5.x = 1;
+	p5.y = 6;
+	point_t p6;
+	p6.x = 15;
+	p6.y = 21;
+
+	point_t pr;
+	pr.x = 3;
+	pr.y = 6;
+
+	pools_t* pool1 = AllocatePool(NULL, p1);
+	pool1->next = AllocatePool(pool1->next, p2);
+	pool1->next->next = AllocatePool(pool1->next->next, p3);
+	pool1->next->next->next = AllocatePool(pool1->next->next->next, p4);
+	pool1->next->next->next->next = AllocatePool(pool1->next->next->next->next, p5);
+	pool1->next->next->next->next->next = AllocatePool(pool1->next->next->next->next->next, p6);
+//	pool1->next->next->next->next->next->next = AllocatePool(pool1->next->next->next->next->next->next, p1);
+
+	move_t* start = AllocateMove(NULL, pr);
+
+	point_t pc;
+	pc= FindNearest(start, pool1);
 	printf_s("the current point is :%d,%d \n", start->CurrentP.x, start->CurrentP.y);
-	printf_s("the nearest point is :%d,%d \n\n", p1.x, p1.y);
-	pool1 = pool1->next;
-	
-	
+	printf_s("the nearest point is :%d,%d \n\n", pc.x, pc.y);
 	  
 
 }
@@ -81,22 +83,40 @@ double Dist(point_t p1, point_t p2)
 	return dist;
 }
 
-move_t* AllocateMove(move_t* ptr)
+move_t* AllocateMove(move_t* ptr, point_t point)
 {
 	//allocate a move node 
 	if (ptr == NULL)
 	{
-		ptr= malloc(sizeof(move_t));
-		ptr->first = NULL;
-		ptr->second = NULL;
+		ptr = malloc(sizeof(move_t));
+		if (ptr != NULL)
+		{
+			ptr->first = NULL;
+			ptr->second = NULL;
+			ptr->CurrentP = point;
+		}
 	}
 	return ptr;
-	
+}
+
+pools_t* AllocatePool(pools_t* ptr, point_t point)
+{
+	//allocate a move node 
+	if (ptr == NULL)
+	{
+		ptr = malloc(sizeof(pools_t));
+		if (ptr != NULL)
+		{
+			ptr->next = NULL;
+			ptr->center = point;
+		}
+	}
+	return ptr;
 }
 
 point_t FindNearest(move_t* CurrentP, pools_t* pools)
 {
-	point_t nearest;
+	point_t nearest=CurrentP->CurrentP;
 	double dist1 = DBL_MAX;
 	double temp = 0;
 	while (pools != NULL)
