@@ -12,6 +12,7 @@ typedef struct point {
 typedef struct pools {
 	point_t center;
 	int size;
+	int visited;
 	struct pools* next;
 } pools_t;
 
@@ -24,11 +25,18 @@ typedef struct move {
 	
 }move_t;
 
+typedef struct twopools {
+	pools_t* nearest;
+	pools_t* second;
+}twopools_t;
+
 
 double Dist(point_t, point_t);
 move_t* AllocateMove(move_t*,point_t);
 pools_t* AllocatePool(pools_t*, point_t);
-point_t FindNearest(move_t*, pools_t*);
+twopools_t FindNearest(move_t*, pools_t*);
+//void route(move_t*, pools_t*);
+void PrintTree(move_t*);
 
 //move_t* BuildBT(move_t*, pools_t*, point_t);
 
@@ -44,7 +52,7 @@ int main()
 	p3.x = 4;
 	p3.y = 1;
 	point_t p4;
-	p4.x = 6;
+	p4.x = 5;
 	p4.y = 5;
 	point_t p5;
 	p5.x = 1;
@@ -53,9 +61,9 @@ int main()
 	p6.x = 15;
 	p6.y = 21;
 
-	point_t pr;
-	pr.x = 3;
-	pr.y = 6;
+	point_t S;
+	S.x = 3;
+	S.y = 3;
 
 	pools_t* pool1 = AllocatePool(NULL, p1);
 	pool1->next = AllocatePool(pool1->next, p2);
@@ -65,12 +73,15 @@ int main()
 	pool1->next->next->next->next->next = AllocatePool(pool1->next->next->next->next->next, p6);
 //	pool1->next->next->next->next->next->next = AllocatePool(pool1->next->next->next->next->next->next, p1);
 
-	move_t* start = AllocateMove(NULL, pr);
+	move_t* start = AllocateMove(NULL, S);
 
-	point_t pc;
-	pc= FindNearest(start, pool1);
+	twopools_t two;
+	two = FindNearest(start, pool1);
 	printf_s("the current point is :%d,%d \n", start->CurrentP.x, start->CurrentP.y);
-	printf_s("the nearest point is :%d,%d \n\n", pc.x, pc.y);
+	printf_s("the nearest point is :%d,%d \n", two.nearest->center.x, two.nearest->center.y);
+	printf_s("the second nearest point is :%d,%d \n", two.second->center.x, two.second->center.y);
+	
+	//route(start, pool1);
 	  
 
 }
@@ -114,22 +125,55 @@ pools_t* AllocatePool(pools_t* ptr, point_t point)
 	return ptr;
 }
 
-point_t FindNearest(move_t* CurrentP, pools_t* pools)
+twopools_t FindNearest(move_t* CurrentP, pools_t* pools)
 {
-	point_t nearest=CurrentP->CurrentP;
+	twopools_t near;
+	near.nearest = CurrentP;
+	near.second = NULL;
 	double dist1 = DBL_MAX;
+	double dist2 = DBL_MAX;
 	double temp = 0;
 	while (pools != NULL)
 	{
-		temp = Dist(CurrentP->CurrentP, pools->center);
-		if (temp < dist1)
+		if (pools->visited) pools = pools->next;
+		else
 		{
-			dist1 = temp;
-			nearest = pools->center;
+			temp = Dist(CurrentP->CurrentP, pools->center);
+			if (temp < dist1)
+			{
+				dist2 = dist1;
+				dist1 = temp;
+				near.second = near.nearest;
+				near.nearest = pools;
+			}
+			else if (temp < dist2)
+			{
+				dist2 = temp;
+				near.second = pools;
+			}
+			pools = pools->next;
 		}
-		pools = pools->next;
 	}
-	return nearest;
+	return near;
+}
+/*
+void route(move_t* move, pools_t* pools)
+{
+	if (pools != NULL&& move!=NULL)
+	{
+		point_t near1 = FindNearest(move, pools);
+	}
+}
+*/
+
+void PrintTree(move_t* move)
+{
+	if (move != NULL)
+	{
+		printf_s("%d ,%d\n", move->CurrentP.x, move->CurrentP.y);
+		PrintTree(move->first);
+	}
+	return;
 }
 
 /*
@@ -139,13 +183,13 @@ move_t* BuildBT(move_t* CurrentP, pools_t* Pools, point_t End)
 	
 	//check if reched z point
 
-	// find nearest children
+	// find near children
 
 	//check if visited them
 	
-	//recursive child nearest
+	//recursive child near
 
-	//recursive child nearest B
+	//recursive child near B
 
 	if (CurrentP == NULL) // Got to the bottom of the BST - insert child
 	{
