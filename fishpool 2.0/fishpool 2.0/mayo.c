@@ -34,7 +34,7 @@ point_t* AllocatePoint(point_t*,int);
 double Dist(point_t, point_t);
 move_t* AllocateMove(move_t*,point_t);
 pools_t* AllocatePool(pools_t*, point_t);
-twopools_t FindNearest(move_t*, pools_t*, point_t*);
+twopools_t* FindNearest(move_t*, pools_t*, point_t*);
 //void route(move_t*, pools_t*);
 void PrintTree(move_t*);
 
@@ -84,18 +84,22 @@ int main()
 	int listsize2 = 4;
 	point_t* visitedP = AllocatePoint(NULL, listsize2);
 	point_t* tempptr = visitedP;
-	*tempptr = p1;
+	tempptr->x = p1.x;
+	tempptr->y = p1.y;
+
 	tempptr = tempptr->next;
-	*tempptr = p2;
+	tempptr->x = p2.x;
+	tempptr->y = p2.y;
 	tempptr = tempptr->next;
-	*tempptr = p3;
+	tempptr->x = p3.x;
+	tempptr->y = p3.y;
 
 	
-	twopools_t two;
+	twopools_t* two ;
 	two = FindNearest(start, pool1,visitedP);
 	printf_s("the current point is :%d,%d \n", start->CurrentP.x, start->CurrentP.y);
-	printf_s("the nearest point is :%d,%d \n", two.nearest->center.x, two.nearest->center.y);
-	printf_s("the second nearest point is :%d,%d \n", two.second->center.x, two.second->center.y);
+	printf_s("the nearest point is :%d,%d \n", two->nearest->center.x, two->nearest->center.y);
+	printf_s("the second nearest point is :%d,%d \n", two->second->center.x, two->second->center.y);
 }
 
 
@@ -158,19 +162,22 @@ pools_t* AllocatePool(pools_t* ptr, point_t point)
 	return ptr;
 }
 
-twopools_t FindNearest(move_t* CurrentP, pools_t* pools, point_t* visited)
+twopools_t* FindNearest(move_t* CurrentP, pools_t* pools, point_t* visited)
 {
-	twopools_t near;
+	twopools_t* near = (twopools_t*)malloc(sizeof(twopools_t));
 	point_t* ptr;
-	near.nearest = NULL; // why not null ---CurrentP
-	near.second = NULL;
+	if (near != NULL)
+	{
+		near->nearest = NULL; // why not null ---CurrentP
+		near->second = NULL;
+	}
 	double dist1 = DBL_MAX;
 	double dist2 = DBL_MAX;
 	double temp = 0;
 	while (pools != NULL)
 	{
 		ptr = visited;
-		int flag = 0;
+		int flag = 1;
 		while(ptr != NULL)
 		{
 			if (ptr->x == pools->center.x && ptr->y == pools->center.y) flag = 0;
@@ -184,13 +191,13 @@ twopools_t FindNearest(move_t* CurrentP, pools_t* pools, point_t* visited)
 			{
 				dist2 = dist1;
 				dist1 = temp;
-				near.second = near.nearest;
-				near.nearest = pools;
+				near->second = near->nearest;
+				near->nearest = pools;
 			}
 			else if (temp < dist2)
 			{
 				dist2 = temp;
-				near.second = pools;
+				near->second = pools;
 			}
 			
 		}
